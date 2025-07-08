@@ -40,10 +40,18 @@ https://mirrors.sjtug.sjtu.edu.cn/immortalwrt/releases/23.05.4/packages/x86_64/l
 - 上述特点 你都可以通过 `99-custom.sh` 配置和调整
 
 ## ❤️其它GitHub Action项目推荐🌟 （建议收藏）⬇️
-https://github.com/wukongdaily/RunFilesBuilder<br>
-https://github.com/wukongdaily/DockerTarBuilder
+- ### [一键生成run插件] 🆕
+- https://github.com/wukongdaily/RunFilesBuilder<br>
+- ### [一键生成docker离线镜像] 🆕
+- https://github.com/wukongdaily/DockerTarBuilder<br>
+- ### [OpenWrt/Armbian 安装器ISO] 🆕
+- https://github.com/wukongdaily/armbian-installer
 
 ## ❤️如何构建docker版ImmortalWrt（建议收藏）⬇️
-https://wkdaily.cpolar.top/15
+https://wkdaily.cpolar.cn/15
 # 🌟鸣谢
 ### https://github.com/immortalwrt
+
+## ❤️赞助作者 ⬇️⬇️
+
+[![点击这里赞助我](https://img.shields.io/badge/点击这里赞助我-支持作者的项目-orange?logo=github)](https://wkdaily.cpolar.cn/01)
