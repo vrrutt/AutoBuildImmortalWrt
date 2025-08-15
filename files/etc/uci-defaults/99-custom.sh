@@ -1,7 +1,7 @@
 #!/bin/sh
 # 99-custom.sh 就是immortalwrt固件首次启动时运行的脚本 位于固件内的/etc/uci-defaults/99-custom.sh
 # Log file for debugging
-LOGFILE="/tmp/uci-defaults-log.txt"
+LOGFILE="/etc/config/uci-defaults-log.txt"
 echo "Starting 99-custom.sh at $(date)" >>$LOGFILE
 # 设置默认防火墙规则，方便虚拟机首次访问 WebUI
 uci set firewall.@zone[1].input='ACCEPT'
@@ -37,8 +37,13 @@ ifnames=$(echo "$ifnames" | awk '{$1=$1};1')
 # 网络设置
 if [ "$count" -eq 1 ]; then
     # 单网口设备 类似于NAS模式 动态获取ip模式 具体ip地址取决于上一级路由器给它分配的ip 也方便后续你使用web页面设置旁路由
-    # 单网口设备 不支持修改ip 不要在此处修改ip
+    # 单网口设备 不支持修改ip 不要在此处修改ip 单网口采用dhcp模式 删除默认的192.168.1.1
     uci set network.lan.proto='dhcp'
+    uci delete network.lan.ipaddr
+    uci delete network.lan.netmask
+    uci delete network.lan.gateway     
+    uci delete network.lan.dns 
+    uci commit network
 elif [ "$count" -gt 1 ]; then
     # 提取第一个接口作为WAN
     wan_ifname=$(echo "$ifnames" | awk '{print $1}')
@@ -69,13 +74,21 @@ elif [ "$count" -gt 1 ]; then
     fi
     # LAN口设置静态IP
     uci set network.lan.proto='static'
-    # 多网口设备 支持修改为别的ip地址,别的地址应该是网关地址，形如192.168.xx.1 项目说明里都强调过。
-    # 大家不能胡乱修改哦 比如有人修改为192.168.100.55 这是错误的理解 这个项目不能提前设置旁路地址
-    # 旁路的设置分2类情况,情况一是单网口的设备,默认是DHCP模式，ip应该在上一级路由器里查看。之后进入web页在设置旁路。
-    # 情况二旁路由如果是多网口设备，也应当用网关访问网页后，在自行在web网页里设置。总之大家不能直接在代码里修改旁路网关。千万不要徒增bug啦。
-    uci set network.lan.ipaddr='192.168.100.1'
+    # 多网口设备 支持修改为别的管理后台地址 在Github Action 的UI上自行输入即可 
     uci set network.lan.netmask='255.255.255.0'
-    echo "set 192.168.100.1 at $(date)" >>$LOGFILE
+    # 设置路由器管理后台地址
+    IP_VALUE_FILE="/etc/config/custom_router_ip.txt"
+    if [ -f "$IP_VALUE_FILE" ]; then
+        CUSTOM_IP=$(cat "$IP_VALUE_FILE")
+        # 用户在UI上设置的路由器后台管理地址
+        uci set network.lan.ipaddr=$CUSTOM_IP
+        echo "custom router ip is $CUSTOM_IP" >> $LOGFILE
+    else
+        uci set network.lan.ipaddr='192.168.100.1'
+        echo "default router ip is 192.168.100.1" >> $LOGFILE
+    fi
+
+
     # 判断是否启用 PPPoE
     echo "print enable_pppoe value=== $enable_pppoe" >>$LOGFILE
     if [ "$enable_pppoe" = "yes" ]; then
@@ -152,7 +165,7 @@ uci commit
 
 # 设置编译作者信息
 FILE_PATH="/etc/openwrt_release"
-NEW_DESCRIPTION="Compiled by wukongdaily"
+NEW_DESCRIPTION="Packaged by wukongdaily"
 sed -i "s/DISTRIB_DESCRIPTION='[^']*'/DISTRIB_DESCRIPTION='$NEW_DESCRIPTION'/" "$FILE_PATH"
 
 exit 0
